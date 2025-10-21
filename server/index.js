@@ -8,17 +8,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// optional: einfacher Request-Logger
 app.use((req, res, next) => {
-  console.log(`[REQ] ${req.method} ${req.originalUrl}`);
+  console.log('[REQ]', req.method, req.originalUrl);
   next();
 });
 
 // Mongo verbinden
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/lexcal', {
+const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/lexcal';
+mongoose.connect(mongoUri, {
   useNewUrlParser: true,
   useUnifiedTopology: true
-}).then(() => console.log('MongoDB connected')).catch(err => console.error('Mongo error', err));
+}).then(() => console.log('MongoDB connected', mongoUri))
+  .catch(err => console.error('Mongo connection error', err));
 
 // Routes (stelle sicher, dass die Dateien existieren)
 const authRoutes = require('./routes/auth');

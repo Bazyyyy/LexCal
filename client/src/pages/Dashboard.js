@@ -98,12 +98,9 @@ const Dashboard = () => {
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1>Dashboard</h1>
 
-        {/* NAVIGATION: Calendar wieder rein */}
+        {/* reduzierte NAV: nur Calendar + Logout */}
         <nav>
-          <Link to="/dashboard" style={{ marginRight: 12 }}>Home</Link>
-          <Link to="/lawyers" style={{ marginRight: 12 }}>Lawyers</Link>
           <Link to="/book" style={{ marginRight: 12 }}>Calendar</Link>
-          {role === 'admin' && <Link to="/admin" style={{ marginRight: 12 }}>Admin</Link>}
           <button onClick={handleLogout}>Logout</button>
         </nav>
       </header>

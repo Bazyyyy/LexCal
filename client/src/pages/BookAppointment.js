@@ -1,7 +1,8 @@
 import { useState, useEffect, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import CalendarView from '../components/CalendarView';
 import { AuthContext } from '../context/AuthContext';
-import { fetchAppointments, bookAppointment } from '../api/appointments';
+import { fetchAppointments, bookAppointment, updateAppointment, deleteAppointment } from '../api/appointments';
 
 const BookAppointment = () => {
   const [events, setEvents] = useState([]);
@@ -12,9 +13,11 @@ const BookAppointment = () => {
   const [selectedLawyerId, setSelectedLawyerId] = useState('');
 
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ date: '', location: '', duration: 60, participants: '' });
+  const [editingId, setEditingId] = useState(null);
+  const [formData, setFormData] = useState({ date: '', title: '', location: '', duration: 60, participants: '' });
 
-  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const { user, logout } = useContext(AuthContext);
   const token = localStorage.getItem('token');
   const currentUser = user || JSON.parse(localStorage.getItem('user') || 'null');
 
@@ -25,12 +28,39 @@ const BookAppointment = () => {
     try {
       const data = await fetchAppointments(cu._id, token);
       setAppointments(data || []);
-      setEvents((data || []).map(app => ({
-        id: app._id,
-        title: app.status === 'cancelled' ? 'Storniert' : (app.clientId?.name || app.lawyerId?.name || 'Gebucht'),
-        start: app.date,
-        extendedProps: { status: app.status, location: app.location, duration: app.duration, participants: app.participants }
-      })));
+
+      setEvents((data || []).map(app => {
+        // berechne start + end basierend auf duration (in Minuten)
+        const startDate = app.date ? new Date(app.date) : new Date();
+        const dur = Number(app.duration) || 60;
+        const endDate = new Date(startDate);
+        endDate.setMinutes(endDate.getMinutes() + dur);
+
+        const details = [
+          app.location || '',
+          ...(Array.isArray(app.participants) ? app.participants : (app.participants ? [app.participants] : []))
+        ].filter(Boolean).join(' • ');
+
+        const title = (app.title && app.title.trim())
+          ? (app.title + (details ? ' • ' + details : ''))
+          : (details || 'Gebucht');
+
+        return {
+          id: app._id,
+          title,
+          start: startDate.toISOString(),
+          end: endDate.toISOString(),
+          allDay: false,
+          extendedProps: {
+            status: app.status,
+            location: app.location,
+            duration: app.duration,
+            participants: app.participants,
+            lawyerName: app.lawyerId?.name,
+            clientName: app.clientId?.name
+          }
+        };
+      }));
     } catch (err) {
       console.error('loadAppointments error', err);
       setAppointments([]);
@@ -59,21 +89,44 @@ const BookAppointment = () => {
     loadLawyers();
   }, [currentUser]);
 
-  const openBookingForm = (dateStr) => {
-    setFormData({ date: dateStr, location: '', duration: 60, participants: '' });
+  const openBookingForm = (dateStr, appt = null) => {
+    if (appt) {
+      setEditingId(appt._id);
+      setFormData({
+        date: appt.date,
+        title: appt.title || '',
+        location: appt.location || '',
+        duration: appt.duration || 60,
+        participants: (appt.participants || []).join(', ')
+      });
+    } else {
+      setEditingId(null);
+      setFormData({ date: dateStr, title: '', location: '', duration: 60, participants: '' });
+    }
     setShowForm(true);
   };
 
   const handleDateClick = (arg) => {
     const cu = currentUser;
     if (!cu) { alert('Bitte einloggen.'); return; }
-    // Wenn Mandant: braucht ausgewählten Anwalt (keine weitere ID-Eingabe)
     if (cu.role === 'client' && !selectedLawyerId) {
       alert('Bitte zuerst einen Anwalt auswählen.');
       return;
     }
-    // öffne Formular (Mandant oder Anwalt)
-    openBookingForm(arg.dateStr);
+    openBookingForm(arg.dateStr, null);
+  };
+
+  // Neuer: Event click -> finde appointment und öffne Formular zum Bearbeiten
+  const handleEventClick = (clickInfo) => {
+    const id = clickInfo.event?.id;
+    if (!id) return;
+    const appt = appointments.find(a => a._id === id);
+    if (!appt) {
+      // fallback: lade einzelne appointment (optional)
+      alert('Termin nicht gefunden zum Bearbeiten.');
+      return;
+    }
+    openBookingForm(appt.date, appt);
   };
 
   const submitBooking = async (e) => {
@@ -81,58 +134,78 @@ const BookAppointment = () => {
     const cu = currentUser;
     if (!cu) { alert('Bitte einloggen.'); return; }
 
-    // bestimme lawyerId / clientId automatisch
     const lawyerId = cu.role === 'lawyer' ? cu._id : selectedLawyerId;
-    const clientId = cu.role === 'client' ? cu._id : cu._id; // Anwalt kann Slot als self-create
+    const clientId = cu._id;
 
-    // Teilnehmer: split by comma, filter empty
     const participants = formData.participants
       .split(',')
       .map(s => s.trim())
       .filter(Boolean);
 
     try {
-      await bookAppointment({
-        lawyerId,
-        clientId,
-        date: formData.date,
-        location: formData.location,
-        duration: Number(formData.duration) || 60,
-        participants
-      }, token);
+      if (editingId) {
+        await updateAppointment(editingId, {
+          lawyerId,
+          clientId,
+          date: formData.date,
+          title: formData.title,
+          location: formData.location,
+          duration: Number(formData.duration) || 60,
+          participants
+        }, token);
+      } else {
+        await bookAppointment({
+          lawyerId,
+          clientId,
+          date: formData.date,
+          title: formData.title,
+          location: formData.location,
+          duration: Number(formData.duration) || 60,
+          participants
+        }, token);
+      }
       setShowForm(false);
+      setEditingId(null);
       await loadAppointments();
-      alert('Termin / Slot erfolgreich gespeichert.');
+      alert(editingId ? 'Termin aktualisiert.' : 'Termin / Slot erfolgreich gespeichert.');
     } catch (err) {
       alert(err.message || 'Fehler beim Speichern');
     }
   };
 
-  const cancelAppointment = async (id) => {
-    console.log('Cancel requested for id', id);
-    const url = `http://localhost:5000/api/appointments/${id}/cancel`;
+  const handleDelete = async () => {
+    if (!editingId) return;
+    if (!confirm('Termin wirklich löschen?')) return;
     try {
-      const res = await fetch(url, { method: 'PATCH', headers: { Authorization: token ? `Bearer ${token}` : undefined }});
-      const text = await res.text();
-      console.log('Cancel response', res.status, text);
-      if (!res.ok) {
-        alert(`Stornieren fehlgeschlagen: ${res.status} - ${text}`);
-        return;
-      }
+      await deleteAppointment(editingId, token);
+      setShowForm(false);
+      setEditingId(null);
       await loadAppointments();
+      alert('Termin gelöscht.');
     } catch (err) {
-      console.error('Cancel request error', err);
-      alert('Fehler beim Stornieren (siehe Konsole)');
+      console.error('Delete error', err);
+      alert(err.message || 'Fehler beim Löschen');
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   return (
     <div style={{ padding: 20 }}>
-      <h2>Calendar / Book Appointment</h2>
+      {/* Header mit Home + Logout */}
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2>Calendar / Book Appointment</h2>
+        <nav>
+          <Link to="/dashboard" style={{ marginRight: 12 }}>Home</Link>
+          <button onClick={handleLogout}>Logout</button>
+        </nav>
+      </header>
 
       <p>
         Eingeloggt als <strong>{currentUser?.name || '—'}</strong> ({currentUser?.role || '—'}).
-        {currentUser?.role === 'lawyer' ? ' Klick auf Datum legt einen Slot an.' : ' Wähle einen Anwalt und klicke Datum, um einen Termin anzufragen.'}
       </p>
 
       {currentUser?.role !== 'lawyer' && (
@@ -155,129 +228,51 @@ const BookAppointment = () => {
 
       {loading ? <p>Loading...</p> : null}
       <div style={{ maxWidth: 900 }}>
-        <CalendarView events={events} handleDateClick={handleDateClick} />
+        <CalendarView events={events} handleDateClick={handleDateClick} handleEventClick={handleEventClick} />
       </div>
-
-      <section style={{ marginTop: 20 }}>
-        <h3>Your appointments</h3>
-
-        {/* Styles für kleine Feld-Pills */}
-        {/* kann auch in CSS ausgelagert werden */}
-        <div style={{ display: 'none' }} aria-hidden />{/* placeholder */}
-
-        {appointments.length === 0 ? (
-          <p>No appointments found.</p>
-        ) : (
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            {appointments.map(a => {
-              const badgeStyle = {
-                display: 'inline-block',
-                padding: '4px 8px',
-                fontSize: 12,
-                background: '#f3f4f6',
-                color: '#111827',
-                borderRadius: 999,
-                marginRight: 8,
-                marginTop: 6
-              };
-
-              return (
-                <li key={a._id} style={{ marginBottom: 12, borderBottom: '1px solid #eee', paddingBottom: 10 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-                    <div>
-                      <div style={{ fontWeight: 600 }}>{new Date(a.date).toLocaleString()}</div>
-                      <div style={{ color: '#4b5563', marginTop: 4 }}>
-                        {a.clientId?.name || a.lawyerId?.name}
-                        {a.status ? <span style={{ marginLeft: 8, color: '#9ca3af' }}>({a.status})</span> : null}
-                      </div>
-
-                      {/* kleine Felder */}
-                      <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', alignItems: 'center' }}>
-                        {a.location ? <span style={badgeStyle}>📍 {a.location}</span> : null}
-                        {a.duration ? <span style={badgeStyle}>⏱ {a.duration} min</span> : null}
-                        {(a.participants && a.participants.length) ? (
-                          a.participants.map((p, idx) => (
-                            <span key={idx} style={badgeStyle}>🙋 {p}</span>
-                          ))
-                        ) : null}
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                      {a.status !== 'cancelled' && (
-                        <button style={{ marginLeft: 8 }} onClick={() => cancelAppointment(a._id)}>Cancel</button>
-                      )}
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
 
       {/* Booking form (simple inline modal) */}
       {showForm && (
-        <div
-          // Overlay: groß zIndex, Klick auf Overlay schließt Modal
-          style={{
-            position: 'fixed',
-            left: 0,
-            top: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0,0,0,0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 2147483647 // sehr hoch, damit es über dem Kalender liegt
-          }}
-          onClick={() => setShowForm(false)}
-        >
-          {/* Container verhindert, dass Klicks an den Hintergrund weitergegeben werden */}
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              zIndex: 2147483648,
-              pointerEvents: 'auto',
-              width: 420
-            }}
-          >
+        <div style={{
+          position: 'fixed', left: 0, top: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2147483647
+        }} onClick={() => { setShowForm(false); setEditingId(null); }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ zIndex: 2147483648, pointerEvents: 'auto', width: 420 }}>
             <form onSubmit={submitBooking} style={{ background: '#fff', padding: 20, borderRadius: 6 }}>
-              <h3>Termin für {new Date(formData.date).toLocaleString()}</h3>
+              <h3>{editingId ? 'Termin bearbeiten' : 'Neuen Termin erstellen'}</h3>
+
+              <div style={{ marginBottom: 8 }}>
+                <label>Titel</label><br />
+                <input autoFocus value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} style={{ width: '100%' }} />
+              </div>
+
+              <div style={{ marginBottom: 8 }}>
+                <label>Datum / Zeit</label><br />
+                <input value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} style={{ width: '100%' }} />
+              </div>
 
               <div style={{ marginBottom: 8 }}>
                 <label>Ort</label><br />
-                <input
-                  autoFocus
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  style={{ width: '100%' }}
-                />
+                <input value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} style={{ width: '100%' }} />
               </div>
 
               <div style={{ marginBottom: 8 }}>
                 <label>Dauer (Minuten)</label><br />
-                <input
-                  type="number"
-                  value={formData.duration}
-                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                  style={{ width: '100%' }}
-                />
+                <input type="number" value={formData.duration} onChange={(e) => setFormData({ ...formData, duration: e.target.value })} style={{ width: '100%' }} />
               </div>
 
               <div style={{ marginBottom: 8 }}>
                 <label>Teilnehmer (Komma-getrennt)</label><br />
-                <input
-                  value={formData.participants}
-                  onChange={(e) => setFormData({ ...formData, participants: e.target.value })}
-                  style={{ width: '100%' }}
-                  placeholder="z.B. Max Mustermann, Maria"
-                />
+                <input value={formData.participants} onChange={(e) => setFormData({ ...formData, participants: e.target.value })} style={{ width: '100%' }} placeholder="z.B. Max Mustermann, Maria" />
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                <button type="button" onClick={() => setShowForm(false)}>Abbrechen</button>
+                <button type="button" onClick={() => { setShowForm(false); setEditingId(null); }}>Abbrechen</button>
+                {editingId && (
+                  <button type="button" onClick={handleDelete} style={{ background: '#f87171', color: '#fff' }}>
+                    Löschen
+                  </button>
+                )}
                 <button type="submit">Speichern</button>
               </div>
             </form>
