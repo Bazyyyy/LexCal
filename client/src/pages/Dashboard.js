@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import CalendarView from '../components/CalendarView';
 import { AuthContext } from '../context/AuthContext';
+import '../styles/AppStyles.css';
 
 const Dashboard = () => {
   const { user, logout } = useContext(AuthContext);
@@ -75,13 +76,24 @@ const Dashboard = () => {
     navigate('/login');
   };
 
+  const handleCalendarClick = () => {
+    navigate('/book');
+  };
+
+  const handleCalendarKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      navigate('/book');
+    }
+  };
+
   // Falls nicht eingeloggt -> klare Meldung + Link
   if (!storedUser) {
     return (
-      <div style={{ padding: 20 }}>
+      <div className="login-prompt">
         <h2>{message}</h2>
         <p>
-          <Link to="/login">Zur Login-Seite</Link>
+          <Link to="/login" className="login-link">Zur Login-Seite</Link>
         </p>
       </div>
     );
@@ -94,34 +106,43 @@ const Dashboard = () => {
   }));
 
   return (
-    <div style={{ padding: 20 }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>Dashboard</h1>
-
-        {/* reduzierte NAV: nur Calendar + Logout */}
-        <nav>
-          <Link to="/book" style={{ marginRight: 12 }}>Calendar</Link>
-          <button onClick={handleLogout}>Logout</button>
+    <div className="dashboard-container">
+      <header className="dashboard-header">
+        <h1 className="dashboard-title">Dashboard</h1>
+        <nav className="app-nav">
+          <Link to="/book" className="nav-link">Calendar</Link>
+          <button onClick={handleLogout} className="btn btn-secondary">Logout</button>
         </nav>
       </header>
 
-      <section style={{ marginTop: 20 }}>
-        <h2>{message}</h2>
-        <p>Signed in as <strong>{storedUser.name}</strong> ({role})</p>
+      <section className="welcome-section">
+        <h2 className="welcome-message">{message}</h2>
+        <p className="user-details">
+          Signed in as <strong>{storedUser.name}</strong> ({role})
+        </p>
       </section>
 
-      <section style={{ marginTop: 30 }}>
-        <h3>Upcoming (overview)</h3>
+      <section className="dashboard-section">
+        <h3 className="dashboard-section-title">Upcoming Appointments</h3>
 
         {/* Anzeige-Logik: erst Loading beim ersten Fetch, danach No events / Liste */}
         {loading && !fetched ? (
-          <p>Loading...</p>
+          <p className="loading-text">Loading...</p>
         ) : (
-          appointments.length === 0 ? <p>No appointments yet.</p> : (
-            <ul>
+          appointments.length === 0 ? (
+            <div className="no-appointments">No appointments yet.</div>
+          ) : (
+            <ul className="appointments-list">
               {appointments.slice(0, 8).map(app => (
-                <li key={app._id}>
-                  {new Date(app.date).toLocaleString()} — {app.clientId?.name || app.lawyerId?.name} {app.status ? `(${app.status})` : ''}
+                <li key={app._id} className="appointment-item">
+                  <span className="appointment-date">
+                    {new Date(app.date).toLocaleString()}
+                  </span>
+                  {' — '}
+                  {app.clientId?.name || app.lawyerId?.name}
+                  {app.status && (
+                    <span className="appointment-status"> ({app.status})</span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -129,26 +150,25 @@ const Dashboard = () => {
         )}
       </section>
 
-      <section style={{ marginTop: 30 }}>
-        <h3>Calendar preview</h3>
+      <section className="dashboard-section">
+        <h3 className="dashboard-section-title">Calendar Preview</h3>
 
         {/* Klickbares Widget: onClick navigiert auf /book */}
         <div
           role="button"
           tabIndex={0}
-          onClick={() => navigate('/book')}
-          onKeyDown={(e) => { if (e.key === 'Enter') navigate('/book'); }}
-          style={{
-            border: '1px solid #ddd',
-            padding: 8,
-            cursor: 'pointer',
-            maxWidth: 900
-          }}
+          onClick={handleCalendarClick}
+          onKeyDown={handleCalendarKeyDown}
+          className="calendar-preview-widget"
           title="Click to open full calendar"
         >
-          <CalendarView events={events} handleDateClick={() => { /* preview: kein click */ }} />
-          <div style={{ textAlign: 'center', marginTop: 8, fontSize: 14, color: '#333' }}>
-            Open full calendar
+          <CalendarView 
+            events={events} 
+            handleDateClick={() => { /* preview: kein click */ }}
+            isPreview={true} // Diese Zeile hinzufügen!
+          />
+          <div className="calendar-preview-footer">
+            Click to open full calendar
           </div>
         </div>
       </section>

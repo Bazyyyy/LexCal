@@ -1,0 +1,528 @@
+/* Layout & Container */
+.app-container { 
+  padding: 20px; 
+}
+
+.dashboard-container {
+  padding: 20px;
+}
+
+/* Header & Navigation */
+.app-header { 
+  display: flex; 
+  justifyContent: space-between; 
+  alignItems: center; 
+}
+
+.dashboard-header {
+  display: flex;
+  justifyContent: space-between;
+  alignItems: center;
+  margin-bottom: 20px;
+}
+
+.dashboard-title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.app-nav { 
+  display: flex; 
+  gap: 12px; 
+  alignItems: center; 
+  margin-left: auto; /* Navigation rechtsbündig */
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #374151;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.nav-link:hover {
+  color: #1f2937;
+  background-color: #f3f4f6;
+}
+
+/* Dashboard Sections */
+.dashboard-section {
+  margin-top: 30px;
+}
+
+.dashboard-section-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 12px;
+}
+
+.welcome-section {
+  margin-top: 20px;
+}
+
+.welcome-message {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.user-details {
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.user-details strong {
+  color: #374151;
+  font-weight: 600;
+}
+
+/* Appointments List */
+.appointments-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.appointment-item {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #374151;
+  transition: all 0.2s;
+}
+
+.appointment-item:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.appointment-date {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.appointment-status {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.no-appointments {
+  color: #9ca3af;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 6px;
+}
+
+/* Calendar Preview - kleiner und volle Breite */
+.calendar-preview-widget {
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  width: 100%; /* volle Breite */
+  max-width: 100%; /* entfernt die 900px Begrenzung */
+  height: 400px; /* feste kleinere Höhe */
+  transition: all 0.3s ease;
+  background: #fff;
+  overflow: hidden; /* verhindert Überlauf */
+}
+
+.calendar-preview-widget:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
+}
+
+.calendar-preview-widget:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.calendar-preview-footer {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.calendar-preview-widget:hover .calendar-preview-footer {
+  color: #3b82f6;
+}
+
+/* FullCalendar in Preview - erzwinge volle Container-Nutzung */
+.calendar-preview-widget .fc {
+  height: 350px !important; /* kleinere Kalenderhöhe */
+  width: 100% !important; /* erzwinge volle Breite */
+}
+
+.calendar-preview-widget .fc-view-harness {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.calendar-preview-widget .fc-header-toolbar {
+  width: 100% !important;
+  font-size: 12px; /* kleinere Toolbar */
+}
+
+.calendar-preview-widget .fc-daygrid {
+  width: 100% !important;
+}
+
+.calendar-preview-widget .fc-daygrid-body {
+  width: 100% !important;
+}
+
+.calendar-preview-widget .fc-scrollgrid {
+  width: 100% !important;
+}
+
+.calendar-preview-widget .fc-scrollgrid-section {
+  width: 100% !important;
+}
+
+.calendar-preview-widget .fc-col-header {
+  width: 100% !important;
+}
+
+.calendar-preview-widget .fc-daygrid-day-number {
+  font-size: 11px; /* kleinere Tageszahlen */
+}
+
+.calendar-preview-widget .fc-event {
+  font-size: 10px; /* kleinere Events */
+}
+
+.calendar-preview-widget .fc-event-title {
+  font-size: 9px; /* noch kleinere Event-Titel */
+}
+
+/* FullCalendar Tabellen-Styling erzwingen */
+.calendar-preview-widget table {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+.calendar-preview-widget .fc-daygrid-day {
+  width: auto !important;
+}
+
+/* Login Prompt */
+.login-prompt {
+  padding: 20px;
+  text-align: center;
+}
+
+.login-prompt h2 {
+  color: #ef4444;
+  margin-bottom: 16px;
+}
+
+.login-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 8px 16px;
+  border: 2px solid #3b82f6;
+  border-radius: 6px;
+  display: inline-block;
+  transition: all 0.2s;
+}
+
+.login-link:hover {
+  background: #3b82f6;
+  color: #fff;
+}
+
+/* User Info */
+.user-info {
+  margin-bottom: 12px;
+}
+
+.lawyer-select-container {
+  margin-bottom: 12px;
+}
+
+.lawyer-select-label {
+  margin-right: 8px;
+}
+
+.lawyer-select {
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+}
+
+/* Calendar */
+.calendar-container { 
+  max-width: 100%; /* entfernt 900px Begrenzung für Hauptkalender */
+}
+
+.loading-text {
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Forms & Modals */
+.modal-overlay { 
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2147483647;
+}
+
+.modal-content { 
+  z-index: 2147483648;
+  pointer-events: auto;
+  width: 420px;
+}
+
+.form-container { 
+  background: #fff;
+  padding: 20px;
+  border-radius: 6px;
+}
+
+.form-title {
+  margin-bottom: 16px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.form-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input::placeholder {
+  color: #9ca3af;
+}
+
+.form-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* Buttons */
+.btn {
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn-primary { 
+  background: #3b82f6;
+  color: #fff;
+  border-color: #3b82f6;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: #fff;
+  border-color: #6b7280;
+}
+
+.btn-secondary:hover {
+  background: #4b5563;
+}
+
+.btn-danger { 
+  background: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+.btn-success { 
+  background: #10b981;
+  color: #fff;
+  border-color: #10b981;
+}
+
+.btn-success:hover {
+  background: #059669;
+}
+
+.btn-warning {
+  background: #fbbf24;
+  color: #1f2937;
+  border-color: #fbbf24;
+}
+
+.btn-warning:hover {
+  background: #f59e0b;
+}
+
+/* Cards & Lists */
+.requests-modal {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2147483647;
+}
+
+.requests-container {
+  background: #fff;
+  padding: 20px;
+  border-radius: 6px;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow: auto;
+}
+
+.requests-title {
+  margin-bottom: 16px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.request-card { 
+  border: 1px solid #e5e7eb;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 4px;
+  background: #f9fafb;
+}
+
+.request-info {
+  margin-bottom: 4px;
+}
+
+.request-info strong {
+  font-weight: 600;
+}
+
+.request-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.no-requests {
+  color: #6b7280;
+  font-style: italic;
+  padding: 20px;
+  text-align: center;
+}
+
+/* FullCalendar Customization */
+.fc-weekend-disabled {
+  background: #f5f5f5 !important;
+  color: #9ca3af !important;
+}
+
+.fc-daygrid-day.fc-weekend-disabled,
+.fc-timegrid-slot.fc-weekend-disabled {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .app-container, .dashboard-container {
+    padding: 12px;
+  }
+  
+  .modal-content {
+    width: 90%;
+    max-width: 400px;
+  }
+  
+  .calendar-container, .calendar-preview-widget {
+    max-width: 100%;
+  }
+  
+  .app-nav, .dashboard-header {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+  
+  .app-nav {
+    margin-left: 0; /* entfernt margin-left auf mobile */
+  }
+  
+  .dashboard-title {
+    font-size: 24px;
+    text-align: center;
+  }
+  
+  .welcome-message {
+    font-size: 20px;
+  }
+  
+  .calendar-preview-widget {
+    height: 300px; /* kleinere Höhe auf mobile */
+  }
+  
+  .calendar-preview-widget .fc {
+    height: 250px !important;
+  }
+  
+  .requests-container {
+    max-width: 90%;
+    margin: 20px;
+  }
+}
