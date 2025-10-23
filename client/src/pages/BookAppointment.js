@@ -253,7 +253,7 @@ const BookAppointment = () => {
   return (
     <div className="app-container">
       <header className="app-header">
-        <h2>Calendar / Book Appointment</h2>
+        <h2>Calendar</h2> {/* Vereinfacht von "Calendar / Book Appointment" */}
         <nav className="app-nav">
           {currentUser?.role === 'lawyer' && (
             <button 
@@ -263,15 +263,17 @@ const BookAppointment = () => {
               Anfragen ({pendingRequests.length})
             </button>
           )}
+          {/* User Info neben Navigation */}
+          <span className="user-badge">
+            {currentUser?.name || '—'} ({currentUser?.role === 'lawyer' ? 'Anwalt' : 'Mandant'})
+          </span>
           <Link to="/dashboard" className="nav-link">Home</Link>
           <button onClick={handleLogout} className="btn btn-secondary">Logout</button>
         </nav>
       </header>
 
-      <p className="user-info">
-        Eingeloggt als <strong>{currentUser?.name || '—'}</strong> ({currentUser?.role || '—'}).
-        {currentUser?.role === 'lawyer' ? ' Klick auf Datum legt einen Slot an.' : ' Wähle einen Anwalt und klicke Datum, um einen Termin anzufragen.'}
-      </p>
+      {/* Entfernt: user-info Paragraph */}
+      {/* <p className="user-info">... */}
 
       {currentUser?.role !== 'lawyer' && (
         <div className="lawyer-select-container">

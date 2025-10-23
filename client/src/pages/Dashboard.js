@@ -110,6 +110,10 @@ const Dashboard = () => {
       <header className="dashboard-header">
         <h1 className="dashboard-title">Dashboard</h1>
         <nav className="app-nav">
+          {/* User Info neben Navigation */}
+          <span className="user-badge">
+            {storedUser.name} ({role === 'lawyer' ? 'Anwalt' : 'Mandant'})
+          </span>
           <Link to="/book" className="nav-link">Calendar</Link>
           <button onClick={handleLogout} className="btn btn-secondary">Logout</button>
         </nav>
@@ -117,9 +121,8 @@ const Dashboard = () => {
 
       <section className="welcome-section">
         <h2 className="welcome-message">{message}</h2>
-        <p className="user-details">
-          Signed in as <strong>{storedUser.name}</strong> ({role})
-        </p>
+        {/* Entfernt: user-details Paragraph */}
+        {/* <p className="user-details">... */}
       </section>
 
       <section className="dashboard-section">
